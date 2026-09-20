@@ -1,4 +1,8 @@
 import requests
+from datetime import datetime
+
+def get_current_time() -> str:
+    return datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
 
 OLLAMA_URL = "http://ollama:11434"
 MODEL = "qwen3:8b"
@@ -18,13 +22,5 @@ def ask_llm(prompt: str) -> str:
     response.raise_for_status()
     return response.json()["response"]
 
-
-while True:
-    prompt = input("\nYou: ")
-
-    if prompt.lower() in {"quit", "exit"}:
-        break
-
-    answer = ask_llm(prompt)
-    print(f"\nAgent: {answer}")
+print(get_current_time())
 

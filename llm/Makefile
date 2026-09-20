@@ -32,6 +32,9 @@ clean: ## remove the container and image
 	docker rm $(CONTAINER)
 	docker rmi $(IMAGE)
 
+install-qwen3: ## install the qwen3 model in the container
+	docker exec -it ollama ollama pull qwen3:8b
+
 help:	## list the available targets 
 	@echo 'IMAGE = ' $(IMAGE)
 	@echo 'CONTAINER = ' $(CONTAINER)

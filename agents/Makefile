@@ -1,26 +1,18 @@
 .DEFAULT_GOAL := help
 
 # Customize these variables as needed
-IMAGE := ollama/ollama:latest
-CONTAINER := ollama
-VOLUME := ollama
+IMAGE := ai-agent
+CONTAINER := ai-agent
+VOLUME := ai-agent
 NETWORK := ai-lab
 
-initialize-environment: ## intialize docker environment (volumes, networks,...)
-	docker volume create $(VOLUME)
-	docker network create $(NETWORK)
+build:	## build the image 
+	docker build -t ai-agent .
 
-create:	## create and run the container 
-	docker run -d \
-          --name $(CONTAINER)\
-	  --gpus all \
-	  --network $(NETWORK) \
-	  -v $(VOLUME):/root/.$(CONTAINER) \
-	  $(IMAGE)
-
-start: ## start the existing container
-	docker start $(CONTAINER)
-
+run: ## run the agent
+	docker run --rm -it \
+		--network $(NETWORK) \
+		$(CONTAINER)
 
 # Stop the running container
 stop: ## stop the container

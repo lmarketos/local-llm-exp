@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN pip install --no-cache-dir requests
 
-COPY agent.py .
+COPY prompt.py .
 
-CMD ["python", "agent.py"]
+CMD ["python", "prompt.py"]
 
