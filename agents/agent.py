@@ -7,7 +7,7 @@ OLLAMA_URL = "http://ollama:11434"
 MODEL = "qwen3:8b"
 
 
-def get_current_time() -> str:
+def get_current_time(**kwargs) -> str:
     return datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
 
 
@@ -106,17 +106,21 @@ def call_model(messages):
     return response.json()
 
 
+TOOL_FUNCTIONS = {
+    "get_current_time": get_current_time,
+    "calculate": calculate,
+}
+
 def execute_tool(tool_call):
     name = tool_call["function"]["name"]
     arguments = tool_call["function"]["arguments"]
 
-    if name == "get_current_time":
-        return get_current_time()
+    function = TOOL_FUNCTIONS.get(name)
 
-    if name == "calculate":
-        return calculate(arguments["expression"])
+    if function is None:
+        return f"Unknown tool: {name}"
 
-    return f"Unknown tool: {name}"
+    return function(**arguments)
 
 
 while True:
