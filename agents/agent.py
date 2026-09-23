@@ -227,43 +227,47 @@ def execute_tool(tool_call):
 # Agent
 # ---------------------------------------------------------------------------
 
-while True:
-    user_input = input("You: ")
-
-    if user_input.lower() in {"exit", "quit"}:
-        break
-
-    messages = [
-        {
-            "role": "user",
-            "content": user_input,
-        }
-    ]
-
+def run_agent():
     while True:
-        data = call_model(messages)
+        user_input = input("You: ")
 
-        tool_calls = data["message"].get("tool_calls", [])
-
-        if not tool_calls:
-            print("Agent:", data["message"]["content"])
+        if user_input.lower() in {"exit", "quit"}:
             break
 
-        messages.append(data["message"])
+        messages = [
+            {
+                "role": "user",
+                "content": user_input,
+            }
+        ]
 
-        for tool_call in tool_calls:
-            print("Tool requested:", tool_call["function"]["name"])
-            print("Arguments:", tool_call["function"]["arguments"])
+        while True:
+            data = call_model(messages)
 
-            result = execute_tool(tool_call)
+            tool_calls = data["message"].get("tool_calls", [])
 
-            print("Tool result:", result)
+            if not tool_calls:
+                print("Agent:", data["message"]["content"])
+                break
 
-            messages.append(
-                {
-                    "role": "tool",
-                    "content": str(result),
-                    "tool_call_id": tool_call.get("id"),
-                }
-            )
+            messages.append(data["message"])
+
+            for tool_call in tool_calls:
+                print("Tool requested:", tool_call["function"]["name"])
+                print("Arguments:", tool_call["function"]["arguments"])
+
+                result = execute_tool(tool_call)
+
+                print("Tool result:", result)
+
+                messages.append(
+                    {
+                        "role": "tool",
+                        "content": str(result),
+                        "tool_call_id": tool_call.get("id"),
+                    }
+                )
+
+if __name__ == "__main__":
+    run_agent()
 
