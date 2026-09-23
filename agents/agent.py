@@ -1,4 +1,5 @@
 import ast
+import json
 import operator
 from datetime import datetime
 
@@ -8,6 +9,20 @@ import requests
 OLLAMA_URL = "http://ollama:11434"
 MODEL = "qwen3:8b"
 
+CONVERSATION_FILE = "/data/conversation.json"
+
+
+def load_conversation():
+    try:
+        with open(CONVERSATION_FILE, "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return []
+
+
+def save_conversation(messages):
+    with open(CONVERSATION_FILE, "w") as file:
+        json.dump(messages, file, indent=2)
 
 # ---------------------------------------------------------------------------
 # Tool implementations
@@ -228,18 +243,21 @@ def execute_tool(tool_call):
 # ---------------------------------------------------------------------------
 
 def run_agent():
+    messages = load_conversation() 
+
     while True:
         user_input = input("You: ")
 
         if user_input.lower() in {"exit", "quit"}:
             break
 
-        messages = [
+        messages.append(
             {
                 "role": "user",
                 "content": user_input,
             }
-        ]
+        )
+        save_conversation(messages)
 
         while True:
             data = call_model(messages)
@@ -248,11 +266,15 @@ def run_agent():
 
             if not tool_calls:
                 print("Agent:", data["message"]["content"])
+                messages.append(data["message"])
+                save_conversation(messages)
                 break
 
             messages.append(data["message"])
 
             for tool_call in tool_calls:
+                tool_call_id = tool_call.get("id")
+                print("Tool call ID:", tool_call_id)
                 print("Tool requested:", tool_call["function"]["name"])
                 print("Arguments:", tool_call["function"]["arguments"])
 
@@ -264,7 +286,7 @@ def run_agent():
                     {
                         "role": "tool",
                         "content": str(result),
-                        "tool_call_id": tool_call.get("id"),
+                        "tool_call_id": tool_call_id,
                     }
                 )
 
