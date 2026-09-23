@@ -3,9 +3,10 @@ from agent import (
     execute_tool,
     get_current_time,
     get_tool_definitions,
+    load_conversation,
     reverse_text,
+    save_conversation,
 )
-
 
 def test_calculate():
     assert calculate("2 + 2") == "4"
@@ -176,4 +177,40 @@ def test_unknown_tool():
         "success": False,
         "error": "Unknown tool: does_not_exist",
     }
+
+def test_save_and_load_conversation(tmp_path, monkeypatch):
+    conversation_file = tmp_path / "conversation.json"
+
+    monkeypatch.setattr(
+        "agent.CONVERSATION_FILE",
+        str(conversation_file),
+    )
+
+    messages = [
+        {
+            "role": "user",
+            "content": "Hello",
+        },
+        {
+            "role": "assistant",
+            "content": "Hi there!",
+        },
+    ]
+
+    save_conversation(messages)
+
+    loaded = load_conversation()
+
+    assert loaded == messages
+
+
+def test_load_conversation_when_file_does_not_exist(tmp_path, monkeypatch):
+    conversation_file = tmp_path / "missing.json"
+
+    monkeypatch.setattr(
+        "agent.CONVERSATION_FILE",
+        str(conversation_file),
+    )
+
+    assert load_conversation() == []
 
