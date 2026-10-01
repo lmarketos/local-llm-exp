@@ -72,6 +72,13 @@ def calculate(expression: str) -> str:
 def reverse_text(text: str) -> str:
     return text[::-1]
 
+def describe_self(**kwargs):
+    return {
+        "model": MODEL,
+        "type": "LLM",
+        "system": "Python agent using Ollama",
+    }
+
 # ---------------------------------------------------------------------------
 # Tool registry
 # ---------------------------------------------------------------------------
@@ -117,6 +124,15 @@ TOOLS = {
             "required": ["text"],
         },
     },
+    "describe_self": {
+        "function": describe_self,
+        "description": "Return authoritative information about the AI system, including the model name and whether the system uses an LLM.",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 }
 
 
@@ -139,6 +155,8 @@ def get_tool_definitions():
 # ---------------------------------------------------------------------------
 
 def call_model(messages):
+    print("TOOLS SENT TO MODEL:")
+    print(get_tool_definitions())
     response = requests.post(
         f"{OLLAMA_URL}/api/chat",
         json={
@@ -246,6 +264,7 @@ def run_agent():
     messages = load_conversation() 
 
     while True:
+        print()
         user_input = input("You: ")
 
         if user_input.lower() in {"exit", "quit"}:
