@@ -26,6 +26,7 @@ run: ## run the agent
 		--name $(RUNTIME_CONTAINER) \
 		-v $(DATA_VOLUME):/data \
 		-v ./workspace:/data/workspace \
+		-v "$(PWD)":/app \
 		$(RUNTIME_CONTAINER)
 
 # Stop the running container
@@ -43,12 +44,14 @@ clean: ## remove the container and image
 test: ## run tests
 	docker run --rm \
 		--network $(NETWORK) \
+		-v "$(PWD)":/app \
 		$(DEBUG_IMAGE) \
 		pytest --cov=agent --cov-report=term-missing
 
 execute-command: ## Usage: COMMAND=<quote>ls -la<quote> make execute-command
 	docker run --rm -v ai-agent-data:/data \
 		-v ./workspace:/data/workspace \
+		-v "$(PWD)":/app \
 	$(DEBUG_IMAGE) sh -c '$(COMMAND)'
 
 
