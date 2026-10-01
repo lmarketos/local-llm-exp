@@ -1,12 +1,22 @@
 from agent import (
     calculate,
+    create_model,
     execute_tool,
     get_current_time,
     get_tool_definitions,
     load_conversation,
     reverse_text,
     save_conversation,
+    read_file,
 )
+
+def test_create_model():
+    model = create_model()
+
+    assert model.ollama_url == "http://ollama:11434"
+    assert model.model_name == "qwen3:8b"
+    assert len(model.tools) > 0
+
 
 def test_calculate():
     assert calculate("2 + 2") == "4"
@@ -89,6 +99,8 @@ def test_tool_definitions():
         "get_current_time",
         "calculate",
         "reverse_text",
+        "describe_self",
+        "read_file"
     }
 
 
@@ -214,3 +226,32 @@ def test_load_conversation_when_file_does_not_exist(tmp_path, monkeypatch):
 
     assert load_conversation() == []
 
+def test_read_file_success(tmp_path):
+    test_file = tmp_path / "example.txt"
+    test_file.write_text("hello agent")
+
+    import agent
+
+    result = read_file("example.txt", str(tmp_path))
+
+    assert result == "hello agent"
+
+
+def test_read_file_missing(tmp_path):
+    import agent
+
+    try:
+        read_file("missing.txt", str(tmp_path))
+        assert False
+    except ValueError as e:
+        assert str(e) == "File does not exist."
+
+
+def test_read_file_blocks_path_escape(tmp_path):
+    import agent
+
+    try:
+        read_file("../secret.txt", str(tmp_path))
+        assert False
+    except ValueError as e:
+        assert str(e) == "Path is outside the allowed workspace."

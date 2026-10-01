@@ -1,12 +1,12 @@
-FROM python:3.12-slim
-
+FROM python:3.12-slim AS base
 WORKDIR /app
 ENV PYTHONPATH=/app
-
-RUN pip install --no-cache-dir requests pytest pytest-cov
-
+RUN pip install --no-cache-dir requests
 COPY agent.py .
-COPY tests ./tests
-
 CMD ["python", "agent.py"]
+
+FROM base AS dev
+RUN pip install --no-cache-dir \
+    pytest pytest-cov ruff mypy types-requests
+COPY tests ./tests
 

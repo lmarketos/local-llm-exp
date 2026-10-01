@@ -1,6 +1,7 @@
 import ast
 import json
 import operator
+import os
 from datetime import datetime
 
 import requests
@@ -10,6 +11,7 @@ OLLAMA_URL = "http://ollama:11434"
 MODEL = "qwen3:8b"
 
 CONVERSATION_FILE = "/data/conversation.json"
+WORKSPACE_DIR = "/data/workspace"
 
 
 def load_conversation():
@@ -79,6 +81,27 @@ def describe_self(**kwargs):
         "system": "Python agent using Ollama",
     }
 
+WORKSPACE_DIR = "/data/workspace"
+
+
+def read_file(path: str, workspace_dir: str = WORKSPACE_DIR) -> str:
+    """Read a text file from the agent workspace."""
+
+    requested_path = os.path.abspath(
+        os.path.join(workspace_dir, path)
+    )
+
+    workspace_path = os.path.abspath(workspace_dir)
+
+    if not os.path.commonpath([requested_path, workspace_path]) == workspace_path:
+        raise ValueError("Path is outside the allowed workspace.")
+
+    if not os.path.isfile(requested_path):
+        raise ValueError("File does not exist.")
+
+    with open(requested_path, "r") as file:
+        return file.read()
+
 # ---------------------------------------------------------------------------
 # Tool registry
 # ---------------------------------------------------------------------------
@@ -133,6 +156,20 @@ TOOLS = {
             "required": [],
         },
     },
+    "read_file": {
+        "function": read_file,
+        "description": "Read a text file from the agent workspace.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Path of the file relative to the agent workspace.",
+                }
+            },
+            "required": ["path"],
+        },
+    },
 }
 
 
@@ -153,24 +190,27 @@ def get_tool_definitions():
 # ---------------------------------------------------------------------------
 # Model interaction
 # ---------------------------------------------------------------------------
+class Model:
+    def __init__(self, ollama_url, model_name, tools):
+        self.ollama_url = ollama_url
+        self.model_name = model_name
+        self.tools = tools
 
-def call_model(messages):
-    print("TOOLS SENT TO MODEL:")
-    print(get_tool_definitions())
-    response = requests.post(
-        f"{OLLAMA_URL}/api/chat",
-        json={
-            "model": MODEL,
-            "messages": messages,
-            "tools": get_tool_definitions(),
-            "stream": False,
-        },
-        timeout=120,
-    )
+    def generate(self, messages):
+        response = requests.post(
+            f"{self.ollama_url}/api/chat",
+            json={
+                "model": self.model_name,
+                "messages": messages,
+                "tools": self.tools,
+                "stream": False,
+            },
+            timeout=120,
+        )
 
-    response.raise_for_status()
+        response.raise_for_status()
 
-    return response.json()
+        return response.json()
 
 
 # ---------------------------------------------------------------------------
@@ -260,7 +300,7 @@ def execute_tool(tool_call):
 # Agent
 # ---------------------------------------------------------------------------
 
-def run_agent():
+def run_agent(model):
     messages = load_conversation() 
 
     while True:
@@ -279,7 +319,7 @@ def run_agent():
         save_conversation(messages)
 
         while True:
-            data = call_model(messages)
+            data = model.generate(messages)
 
             tool_calls = data["message"].get("tool_calls", [])
 
@@ -309,6 +349,11 @@ def run_agent():
                     }
                 )
 
+def create_model():
+    tools = get_tool_definitions()
+    return Model(OLLAMA_URL, MODEL, tools)
+
 if __name__ == "__main__":
-    run_agent()
+    model = create_model()
+    run_agent(model)
 

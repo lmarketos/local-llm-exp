@@ -1,8 +1,10 @@
 .DEFAULT_GOAL := help
 
 # Customize these variables as needed
-IMAGE := ai-agent
-CONTAINER := ai-agent
+RUNTIME_IMAGE := ai-agent
+RUNTIME_CONTAINER := ai-agent
+DEBUG_IMAGE := ai-agent-debug
+DEBUG_CONTAINER := ai-agent-debug
 NETWORK := ai-lab
 DATA_VOLUME := ai-agent-data
 
@@ -15,36 +17,42 @@ remove-volume: ## remove the data volume
 	docker volume rm $(DATA_VOLUME)
 
 build:	## build the image 
-	docker build -t $(IMAGE) .
+	docker build --target base -t $(RUNTIME_IMAGE) .
+	docker build --target dev -t $(DEBUG_IMAGE) .
 
 run: ## run the agent
 	docker run --rm -it \
 		--network $(NETWORK) \
-		--name $(CONTAINER) \
+		--name $(RUNTIME_CONTAINER) \
 		-v $(DATA_VOLUME):/data \
-		$(CONTAINER)
+		-v ./workspace:/data/workspace \
+		$(RUNTIME_CONTAINER)
 
 # Stop the running container
 stop: ## stop the container
-	-docker stop $(CONTAINER) 
+	-docker stop $(RUNTIME_CONTAINER) 
 
 # Remove the container and image
 clean: ## remove the container and image 
 	-stop 
-	-docker rm $(CONTAINER)
-	-docker rmi $(IMAGE)
+	-docker rm $(RUNTIME_CONTAINER)
+	-docker rmi $(RUNTIME_IMAGE)
+	-docker rm $(DEBUG_CONTAINER)
+	-docker rmi $(DEBUG_IMAGE)
 
 test: ## run tests
 	docker run --rm \
 		--network $(NETWORK) \
-		$(IMAGE) \
+		$(DEBUG_IMAGE) \
 		pytest --cov=agent --cov-report=term-missing
 
 execute-command: ## Usage: COMMAND=<quote>ls -la<quote> make execute-command
-	docker run --rm -v ai-agent-data:/data python:3.12-slim sh -c '$(COMMAND)'
+	docker run --rm -v ai-agent-data:/data \
+		-v ./workspace:/data/workspace \
+	$(DEBUG_IMAGE) sh -c '$(COMMAND)'
 
 
 help:	## list the available targets 
-	@echo 'IMAGE = ' $(IMAGE)
-	@echo 'CONTAINER = ' $(CONTAINER)
+	@echo 'IMAGE = ' $(RUNTIME_IMAGE)
+	@echo 'CONTAINER = ' $(RUNTIME_CONTAINER)
 	@sed -rn 's/^([a-zA-Z_-]+):.*?## (.*)$$/"\1" "\2"/p' < $(MAKEFILE_LIST) | xargs printf "make %-25s# %s\n"
