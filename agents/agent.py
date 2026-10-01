@@ -6,7 +6,6 @@ from datetime import datetime
 
 import requests
 
-
 OLLAMA_URL = "http://ollama:11434"
 MODEL = "qwen3:8b"
 

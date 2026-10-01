@@ -5,9 +5,9 @@ from agent import (
     get_current_time,
     get_tool_definitions,
     load_conversation,
+    read_file,
     reverse_text,
     save_conversation,
-    read_file,
 )
 
 
@@ -230,7 +230,6 @@ def test_read_file_success(tmp_path):
     test_file = tmp_path / "example.txt"
     test_file.write_text("hello agent")
 
-    import agent
 
     result = read_file("example.txt", str(tmp_path))
 
@@ -238,7 +237,6 @@ def test_read_file_success(tmp_path):
 
 
 def test_read_file_missing(tmp_path):
-    import agent
 
     try:
         read_file("missing.txt", str(tmp_path))
@@ -248,7 +246,6 @@ def test_read_file_missing(tmp_path):
 
 
 def test_read_file_blocks_path_escape(tmp_path):
-    import agent
 
     try:
         read_file("../secret.txt", str(tmp_path))
