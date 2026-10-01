@@ -54,6 +54,14 @@ execute-command: ## Usage: COMMAND=<quote>ls -la<quote> make execute-command
 		-v "$(PWD)":/app \
 	$(DEBUG_IMAGE) sh -c '$(COMMAND)'
 
+format: ## formats python files
+	COMMAND="ruff format ." make execute-command
+
+check: ## uses ruff to check python files
+	COMMAND="ruff check ." make execute-command
+
+fix: ## uses ruff to fix python files
+	COMMAND="ruff check --fix ." make execute-command
 
 help:	## list the available targets 
 	@echo 'IMAGE = ' $(RUNTIME_IMAGE)
