@@ -10,6 +10,7 @@ from agent import (
     read_file,
 )
 
+
 def test_create_model():
     model = create_model()
 
@@ -90,17 +91,14 @@ def test_get_current_time():
 def test_tool_definitions():
     definitions = get_tool_definitions()
 
-    names = {
-        definition["function"]["name"]
-        for definition in definitions
-    }
+    names = {definition["function"]["name"] for definition in definitions}
 
     assert names == {
         "get_current_time",
         "calculate",
         "reverse_text",
         "describe_self",
-        "read_file"
+        "read_file",
     }
 
 
@@ -190,6 +188,7 @@ def test_unknown_tool():
         "error": "Unknown tool: does_not_exist",
     }
 
+
 def test_save_and_load_conversation(tmp_path, monkeypatch):
     conversation_file = tmp_path / "conversation.json"
 
@@ -225,6 +224,7 @@ def test_load_conversation_when_file_does_not_exist(tmp_path, monkeypatch):
     )
 
     assert load_conversation() == []
+
 
 def test_read_file_success(tmp_path):
     test_file = tmp_path / "example.txt"

@@ -26,9 +26,11 @@ def save_conversation(messages):
     with open(CONVERSATION_FILE, "w") as file:
         json.dump(messages, file, indent=2)
 
+
 # ---------------------------------------------------------------------------
 # Tool implementations
 # ---------------------------------------------------------------------------
+
 
 def get_current_time(**kwargs) -> str:
     return datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
@@ -71,8 +73,10 @@ def calculate(expression: str) -> str:
     result = evaluate(tree.body)
     return str(result)
 
+
 def reverse_text(text: str) -> str:
     return text[::-1]
+
 
 def describe_self(**kwargs):
     return {
@@ -81,15 +85,14 @@ def describe_self(**kwargs):
         "system": "Python agent using Ollama",
     }
 
+
 WORKSPACE_DIR = "/data/workspace"
 
 
 def read_file(path: str, workspace_dir: str = WORKSPACE_DIR) -> str:
     """Read a text file from the agent workspace."""
 
-    requested_path = os.path.abspath(
-        os.path.join(workspace_dir, path)
-    )
+    requested_path = os.path.abspath(os.path.join(workspace_dir, path))
 
     workspace_path = os.path.abspath(workspace_dir)
 
@@ -101,6 +104,7 @@ def read_file(path: str, workspace_dir: str = WORKSPACE_DIR) -> str:
 
     with open(requested_path, "r") as file:
         return file.read()
+
 
 # ---------------------------------------------------------------------------
 # Tool registry
@@ -125,8 +129,7 @@ TOOLS = {
                 "expression": {
                     "type": "string",
                     "description": (
-                        "The arithmetic expression to calculate, "
-                        "such as 25 * 4 + 10."
+                        "The arithmetic expression to calculate, such as 25 * 4 + 10."
                     ),
                 }
             },
@@ -230,6 +233,7 @@ def validate_arguments(tool, arguments):
 
     return None
 
+
 def validate_argument_types(tool, arguments):
     properties = tool["parameters"].get("properties", {})
 
@@ -251,7 +255,8 @@ def validate_argument_types(tool, arguments):
             )
 
     return None
-        
+
+
 def execute_tool(tool_call):
     name = tool_call["function"]["name"]
     arguments = tool_call["function"]["arguments"]
@@ -296,12 +301,14 @@ def execute_tool(tool_call):
             "error": str(e),
         }
 
+
 # ---------------------------------------------------------------------------
 # Agent
 # ---------------------------------------------------------------------------
 
+
 def run_agent(model):
-    messages = load_conversation() 
+    messages = load_conversation()
 
     while True:
         print()
@@ -349,11 +356,12 @@ def run_agent(model):
                     }
                 )
 
+
 def create_model():
     tools = get_tool_definitions()
     return Model(OLLAMA_URL, MODEL, tools)
 
+
 if __name__ == "__main__":
     model = create_model()
     run_agent(model)
-
